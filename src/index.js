@@ -10,8 +10,14 @@ app.use(parser.json());
 
 // parent
 app.get('/', (req, res) => {
-    console.log('/', req)
     res.send('<h1>Parent request</h1>')
+})
+
+// info
+app.get('/info', (req, res) => {
+    const requestTime = new Date()
+    const html = `<p>Phonebook has info for ${persons.length} people</p> <p>${requestTime}</p>`
+    res.send(html)
 })
 
 // all persons
