@@ -1,12 +1,14 @@
 const contactFile = require("./contacts.json");
 const express = require("express");
 const parser = require("body-parser");
+const Morgan = require("morgan");
 const PORT = 3001;
 
 let persons = contactFile.persons; // Make in-memory copy of persons array
 
 const app = express();
 app.use(parser.json());
+app.use(Morgan("tiny"));
 
 // parent
 app.get("/", (req, res) => {
