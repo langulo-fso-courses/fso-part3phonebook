@@ -22,31 +22,37 @@ app.get('/info', (req, res) => {
 
 // all persons
 app.get('/api/persons', (req, res) => {
-    console.log('/persons', 'get all persons', req)
     res.json(persons)
 })
 
-// specific contact
-app.get('/api/persons/:id', (req, res) => {
-    console.log('/persons', 'get one', req)
-    
+// specific person
+app.get('/api/persons/:id', (req, res) => {    
+    // Get the person id from the params of the request
+    const personId = Number(req.params.id)
+    const person = persons.find(p => p.id === personId)
+    // Check if we have a valid person
+    if (person) {
+        // Return the serialized person
+        res.json(person)
+    } else {
+        // Not found, send error
+        res.status(404).send()
+    }
 })
 
 // new contact
 app.post('/api/persons', (req, res) => {
-    console.log('/persons', 'post', req)
+    
 })
 
 // update contact
 app.put('/api/persons/:id', (req, res) => {
-    console.log('/persons', 'put', req)
+    
 })
 
 // delete contact
 app.delete('/api/persons/:id', (req, res) => {
-    console.log('/persons', 'delete', req)
-    const noteId = req.id
-    
+    const personId = Number(req.params.id)
 })
 
 app.listen(PORT, () => {
