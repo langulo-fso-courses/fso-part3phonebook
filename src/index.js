@@ -1,14 +1,14 @@
 const contactFile = require("./contacts.json");
 const express = require("express");
 const parser = require("body-parser");
-const Morgan = require("morgan");
+const customMorgan = require("./MorganTokenizer");
+
 const PORT = 3001;
-
 let persons = contactFile.persons; // Make in-memory copy of persons array
-
+// Filechanges
 const app = express();
 app.use(parser.json());
-app.use(Morgan("tiny"));
+app.use(customMorgan);
 
 // parent
 app.get("/", (req, res) => {
@@ -62,14 +62,16 @@ const validateNewPerson = (newPerson, personsList) => {
       return { error: "name must be unique" };
     }
   } catch (err) {
-    console.log(err);
     return { error: "missing attribute" };
   }
 };
 
 // new contact
 app.post("/api/persons", (req, res) => {
-  const newPerson = req.body;
+  // If you do this, you change the original, DONT DO IT
+  // const newPerson = req.body;
+  // This however creates a copy, so it's ok
+  const newPerson = JSON.parse(JSON.stringify(req.body));
   // if the body's not empty, save the person, else return an error
   let error = validateNewPerson(newPerson, persons);
   if (!error) {
