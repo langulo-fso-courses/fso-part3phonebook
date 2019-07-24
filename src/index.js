@@ -1,14 +1,14 @@
 const contactFile = require("./contacts.json");
 const express = require("express");
 const parser = require("body-parser");
-const customMorgan = require("./MorganTokenizer");
+// const customMorgan = require("./MorganTokenizer");
 
 const PORT = 3001;
 let persons = contactFile.persons; // Make in-memory copy of persons array
 // Filechanges
 const app = express();
 app.use(parser.json());
-app.use(customMorgan);
+// app.use(customMorgan);
 
 // parent
 app.get("/", (req, res) => {
