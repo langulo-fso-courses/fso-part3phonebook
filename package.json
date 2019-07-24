@@ -7,7 +7,7 @@
     "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "nodemon src/index.js",
-    "build:ui": "rd /s /q build && cd ../fullstackopen/part2/phonebook && npm run build --prod && xcopy build ..\\fsopart3contacts\\build /s /i",
+    "build:ui": "rd /s /q build && cd ../fullstackopen/part2/phonebook && npm run build --prod && xcopy C:\\VSCodeProjects\\fullstackopen\\part2\\phonebook\\build C:\\VSCodeProjects\\fsopart3contacts\\build /s /i",
     "deploy": "git push heroku master",
     "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push && npm run deploy",
     "logs:prod": "heroku logs --tail"
