@@ -1,19 +1,16 @@
 const contactFile = require("./contacts.json");
 const express = require("express");
 const parser = require("body-parser");
+const corsMiddleWare = require("cors");
 // const customMorgan = require("./MorganTokenizer");
 
-const PORT = 3001;
 let persons = contactFile.persons; // Make in-memory copy of persons array
-// Filechanges
 const app = express();
+// Allows the server to deliver static files (Here, to deliver the frontend built app)
+app.use(express.static('build'));
+app.use(corsMiddleWare());  // Allow cross origin requests
 app.use(parser.json());
-// app.use(customMorgan);
-
-// parent
-app.get("/", (req, res) => {
-  res.send("<h1>Parent request</h1>");
-});
+// app.use(customMorgan);  // logger
 
 // info
 app.get("/info", (req, res) => {
@@ -46,8 +43,8 @@ app.get("/api/persons/:id", (req, res) => {
 
 /**
  * Returns null for good requests or an error obj for bad ones
- * @param {*} newPerson 
- * @param {*} personsList 
+ * @param {*} newPerson
+ * @param {*} personsList
  */
 const validateNewPerson = (newPerson, personsList) => {
   try {
@@ -77,7 +74,8 @@ app.post("/api/persons", (req, res) => {
   if (!error) {
     newPerson.id = Math.floor(Math.random() * 10000);
     persons = persons.concat(newPerson);
-    res.status(202).send();
+    //res.status(202).send();  // This is the correct response
+    res.json(newPerson); // This is the response that works without fixing the front
   } else {
     res.status(400).json(error);
   }
@@ -101,6 +99,7 @@ app.delete("/api/persons/:id", (req, res) => {
   }
 });
 
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`App listening on port: ${PORT}`);
 });
