@@ -19,7 +19,22 @@ const dbURI = `mongodb+srv://fosapps:${password}@luisangulo-ucxal.mongodb.net/${
 mongoose.connect(dbURI, { useNewUrlParser: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
-// TODO - refactor : This chunk of code is NOT good. Give it good design once I learn how it should look
+// Hacky solution. In a real API, to avoid this callback nesting, we can use Events to prevent the app from starting in a "broken"
+// (I.E. "Still waiting for connection, but listening for requests that may cause errors") state, like so:
+
+/*
+expressApp.on('ready', function() { 
+  expressApp.listen(3000, function(){ 
+    console.log("app is ready"); 
+}); 
+}); 
+mongoose.connect( "mongodb://localhost/mydb" );
+mongoose.connection.once('open', function() { 
+// All OK - fire (emit) a ready event. 
+expressApp.emit('ready'); 
+});
+*/
+
 db.once("open", () => {
   const contactSchema = new mongoose.Schema({ name: String, number: String });
   const Contact = mongoose.model("Contact", contactSchema);
