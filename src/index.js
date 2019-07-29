@@ -1,44 +1,57 @@
-const contactFile = require("./contacts.json");
 const express = require("express");
 const parser = require("body-parser");
 const corsMiddleWare = require("cors");
-// const customMorgan = require("./MorganTokenizer");
-
-let persons = contactFile.persons; // Make in-memory copy of persons array
+const Person = require("./models/persons"); // Person mongoose model
 const app = express();
 // Allows the server to deliver static files (Here, to deliver the frontend built app)
-app.use(express.static('build'));
-app.use(corsMiddleWare());  // Allow cross origin requests
+app.use(express.static("build"));
+app.use(corsMiddleWare()); // Allow cross origin requests
 app.use(parser.json());
-// app.use(customMorgan);  // logger
 
-// info
+// html sample page for devtesting
 app.get("/info", (req, res) => {
-  const requestTime = new Date();
-  const html = `<p>Phonebook has info for ${
-    persons.length
-  } people</p> <p>${requestTime}</p>`;
-  res.send(html);
+  Person.find({})
+    .then(people => {
+      // people is an array of person objs in the atlas db
+      const requestTime = new Date();
+      const html = `<p>Phonebook has info for ${
+        people.length
+      } people</p> <p>${requestTime}</p>`;
+      res.status(200).send(html);
+    })
+    .catch(err => {
+      console.log("/info response error: ", err.message);
+      res.status(400).send(err.message);
+    });
 });
 
 // all persons
 app.get("/api/persons", (req, res) => {
-  res.json(persons);
+  Person.find({})
+    .then(people => {
+      res.json(people.map(person => person.toJSON()));
+    })
+    .catch(err => {
+      console.log("/info response error: ", err.message);
+      res.status(400).send();
+    });
 });
 
 // specific person
 app.get("/api/persons/:id", (req, res) => {
-  // Get the person id from the params of the request
-  const personId = Number(req.params.id);
-  const person = persons.find(p => p.id === personId);
-  // Check if we have a valid person
-  if (person) {
-    // Return the serialized person
-    res.json(person);
-  } else {
-    // Not found, send error
-    res.status(404).send();
-  }
+  const personId = req.params.id;
+  Person.findById(personId)
+    .then(person => {
+      if (person) {
+        res.json(person.toJSON());
+      } else {
+        res.status(404).send(); // Not found, send error
+      }
+    })
+    .catch(error => {
+      console.log("get error: ", error);
+      res.status(400).send({ error: " malformatted id " }); // a bad ID is the only way this could fail
+    });
 });
 
 /**
@@ -63,28 +76,28 @@ const validateNewPerson = (newPerson, personsList) => {
   }
 };
 
-// new contact
 app.post("/api/persons", (req, res) => {
-  // If you do this, you change the original, DONT DO IT
-  // const newPerson = req.body;
-  // This however creates a copy, so it's ok
-  const newPerson = JSON.parse(JSON.stringify(req.body));
-  // if the body's not empty, save the person, else return an error
-  let error = validateNewPerson(newPerson, persons);
-  if (!error) {
-    newPerson.id = Math.floor(Math.random() * 10000);
-    persons = persons.concat(newPerson);
-    //res.status(202).send();  // This is the correct response
-    res.json(newPerson); // This is the response that works without fixing the front
+  const personData = JSON.parse(JSON.stringify(req.body));
+  // let error = validateNewPerson(personData, persons);
+  let clientError = null;
+  if (!clientError) {
+    console.log('persondata', personData);
+    
+    const newPerson = new Person(personData);
+    console.log('newperson:', newPerson)
+    newPerson.save()
+    .then(person => res.json(person.toJSON()))
+    .catch(err => res.status(400).send('Error creating person: ', err))
   } else {
-    res.status(400).json(error);
+    res.status(400).json(clientError);
   }
 });
 
-// update contact
-app.put("/api/persons/:id", (req, res) => {});
+app.put("/api/persons/:id", (req, res) => {
+  console.log('Put request');
+  
+});
 
-// delete contact
 app.delete("/api/persons/:id", (req, res) => {
   // Get the person id from the params of the request
   const personId = Number(req.params.id);
