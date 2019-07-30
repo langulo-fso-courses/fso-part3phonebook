@@ -1,6 +1,8 @@
 const express = require("express");
 const parser = require("body-parser");
 const corsMiddleWare = require("cors");
+const badIdMiddleWare = require("./errors/malformed_id");
+const badEndpointMiddleWare = require("./errors/unknown_endpoint");
 const Person = require("./models/persons"); // Person mongoose model
 const app = express();
 // Allows the server to deliver static files (Here, to deliver the frontend built app)
@@ -38,7 +40,7 @@ app.get("/api/persons", (req, res) => {
 });
 
 // specific person
-app.get("/api/persons/:id", (req, res) => {
+app.get("/api/persons/:id", (req, res, next) => {
   const personId = req.params.id;
   Person.findById(personId)
     .then(person => {
@@ -48,69 +50,40 @@ app.get("/api/persons/:id", (req, res) => {
         res.status(404).send(); // Not found, send error
       }
     })
-    .catch(error => {
-      console.log("get error: ", error);
-      res.status(400).send({ error: " malformatted id " }); // a bad ID is the only way this could fail
-    });
+    .catch(error => next(error));
 });
 
-/**
- * Returns null for good requests or an error obj for bad ones
- * @param {*} newPerson
- * @param {*} personsList
- */
-const validateNewPerson = (newPerson, personsList) => {
-  try {
-    if (!newPerson.name.length) {
-      return { error: "name must not be empty" };
-    }
-    if (!newPerson.number.length) {
-      return { error: "number must not be empty" };
-    }
-    const repeat = personsList.find(p => p.name === newPerson.name);
-    if (repeat) {
-      return { error: "name must be unique" };
-    }
-  } catch (err) {
-    return { error: "missing attribute" };
-  }
-};
-
+// New person
 app.post("/api/persons", (req, res) => {
-  const personData = JSON.parse(JSON.stringify(req.body));
-  // let error = validateNewPerson(personData, persons);
-  let clientError = null;
-  if (!clientError) {
-    console.log('persondata', personData);
-    
-    const newPerson = new Person(personData);
-    console.log('newperson:', newPerson)
-    newPerson.save()
+  // Note that we're no longer validating the person obj.
+  // The validations are now handled client-side
+  const newPerson = new Person(req.body);
+  newPerson
+    .save()
     .then(person => res.json(person.toJSON()))
-    .catch(err => res.status(400).send('Error creating person: ', err))
-  } else {
-    res.status(400).json(clientError);
-  }
+    .catch(err => res.status(400).send("Error creating person: ", err));
 });
 
 app.put("/api/persons/:id", (req, res) => {
-  console.log('Put request');
-  
+  // TODO: Test using the body directly
+  console.log(req.body)
+  Person.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    .then(updatedPerson => res.json(updatedPerson.toJSON()))
+    // Use error handling middleware
+    .catch(error => next(error));
 });
 
-app.delete("/api/persons/:id", (req, res) => {
-  // Get the person id from the params of the request
-  const personId = Number(req.params.id);
-  const prevLen = persons.length;
-  persons = persons.filter(p => p.id !== personId);
-  // If the list is shorter, we succeeded
-  if (persons.length !== prevLen) {
-    res.status(200).send();
-  } else {
-    // Not found, send error
-    res.status(404).send();
-  }
+// TODO: Remember to test the frontend
+app.delete("/api/persons/:id", (req, res, next) => {
+  const contactId = req.params.id;
+  Person.findByIdAndRemove(contactId)
+    .then(result => res.status(204).end())
+    // Pass the error to middleware handler instead of resolving here
+    .catch(err => next(err));
 });
+
+app.use(badEndpointMiddleWare); // Second to last executed middleware
+app.use(badIdMiddleWare); // Last executed middleware
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

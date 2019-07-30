@@ -1,5 +1,6 @@
 require("dotenv").config();
 const mongoose = require("mongoose"); // mongoDB middleware lib
+mongoose.set('useFindAndModify', false); // Do NOT use "true" or mongoose will use a deprecated mongoDB API method
 
 // Get the URI from .env config
 const dbURI = process.env.MONGODB_URI;
