@@ -3,6 +3,7 @@ const parser = require("body-parser");
 const corsMiddleWare = require("cors");
 const badIdMiddleWare = require("./errors/malformed_id");
 const badEndpointMiddleWare = require("./errors/unknown_endpoint");
+const badPersonMiddleWare = require("./errors/invalid_person");
 const Person = require("./models/persons"); // Person mongoose model
 const app = express();
 // Allows the server to deliver static files (Here, to deliver the frontend built app)
@@ -54,14 +55,14 @@ app.get("/api/persons/:id", (req, res, next) => {
 });
 
 // New person
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   // Note that we're no longer validating the person obj.
   // The validations are now handled client-side
   const newPerson = new Person(req.body);
   newPerson
     .save()
     .then(person => res.json(person.toJSON()))
-    .catch(err => res.status(400).send("Error creating person: ", err));
+    .catch(error => next(error));  // Delegate error handling to middleware
 });
 
 app.put("/api/persons/:id", (req, res) => {
@@ -82,7 +83,8 @@ app.delete("/api/persons/:id", (req, res, next) => {
     .catch(err => next(err));
 });
 
-app.use(badEndpointMiddleWare); // Second to last executed middleware
+app.use(badEndpointMiddleWare); // Third to last executed middleware
+app.use(badPersonMiddleWare); // Second to last executed middleware
 app.use(badIdMiddleWare); // Last executed middleware
 
 const PORT = process.env.PORT || 3001;

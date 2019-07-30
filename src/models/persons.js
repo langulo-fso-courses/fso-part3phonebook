@@ -12,9 +12,19 @@ mongoose
   .catch(err => console.log("Connection failed. Check URI/DB Service status", err));
 
 // Define the MongoDB schema for Person objects
+// Define validation rules for the schema fields. Attempts to violate schema constraints will throw exceptions
+// Note that adding/changing constraints changes the definition of the schema
 const schema = new mongoose.Schema({
-  name: String,
-  number: String
+  name: {
+    type: String,
+    minlength: 3,
+    required: true
+  },
+  number: {
+    type: String,
+    minlength: 8,
+    required: true
+  }
 });
 
 // We replace part of the callback that serializes each Person obj to JSON format to remove unwanted properties and
