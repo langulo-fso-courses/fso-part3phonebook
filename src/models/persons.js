@@ -1,4 +1,5 @@
 require("dotenv").config();
+var uniqueValidator = require('mongoose-unique-validator');  // This fails to build on git, I'd like it out ASAP
 const mongoose = require("mongoose"); // mongoDB middleware lib
 mongoose.set('useFindAndModify', false); // Do NOT use "true" or mongoose will use a deprecated mongoDB API method
 
@@ -23,9 +24,14 @@ const schema = new mongoose.Schema({
   number: {
     type: String,
     minlength: 8,
-    required: true
+    required: true,
+    unique: true  // This is bad because "unique" already HAS behavior in mongoose, but that's the fso spec
   }
 });
+
+
+// Apply the uniqueValidator plugin to userSchema.
+schema.plugin(uniqueValidator);
 
 // We replace part of the callback that serializes each Person obj to JSON format to remove unwanted properties and
 // convert the _id obj to a string.
